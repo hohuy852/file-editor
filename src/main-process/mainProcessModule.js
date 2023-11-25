@@ -15,7 +15,6 @@ function createWindow() {
             preload: path.join(__dirname, '../renderer/components/App.js')
         }
     });
-    mainWindow.webContents.openDevTools();
 
     const indexPath = path.join(__dirname, '../index.html');
     mainWindow.loadFile(indexPath);
@@ -45,32 +44,19 @@ ipcMain.on('listFolders', (event, folderPath) => {
 function listFolderContents(event, folderPath) {
     try {
         console.log('Listing folder contents:', folderPath);
-        const filesAndFolders = listContentsRecursively(folderPath);
+        const directories = listContentsRecursively(folderPath);
 
-        console.log('Files and folders:', filesAndFolders);
-        event.reply('folderContents', filesAndFolders);
+        console.log('Directories:', directories);
+        event.reply('folderContents', directories);
     } catch (error) {
         console.error('Error listing folder contents:', error);
         event.reply('folderContentsError', error.message);
     }
 }
 
-function listFolders(event, folderPath) {
-    try {
-        console.log('Listing folders only:', folderPath);
-        const folders = listFoldersRecursively(folderPath);
-
-        console.log('Folders only:', folders);
-        event.reply('folderContents', folders);
-    } catch (error) {
-        console.error('Error listing folders:', error);
-        event.reply('folderContentsError', error.message);
-    }
-}
-
-function listFoldersRecursively(folderPath) {
+function listContentsRecursively(folderPath) {
     const contents = fs.readdirSync(folderPath);
-    let folders = [];
+    let directories = [];
 
     contents.forEach((item) => {
         const fullPath = path.join(folderPath, item);
@@ -81,47 +67,22 @@ function listFoldersRecursively(folderPath) {
             const entry = {
                 name: item,
                 path: fullPath,
+                isDirectory: isDirectory,
+                size: null,
+                extension: null
             };
 
-            folders.push(entry);
+            directories.push(entry);
 
             // Recursively list contents for subdirectories
-            const subFolders = listFoldersRecursively(fullPath);
-            folders = folders.concat(subFolders);
+            const subDirectories = listContentsRecursively(fullPath);
+            directories = directories.concat(subDirectories);
         }
     });
 
-    return folders;
+    return directories;
 }
 
-function listContentsRecursively(folderPath) {
-    const contents = fs.readdirSync(folderPath);
-    let filesAndFolders = [];
-
-    contents.forEach((item) => {
-        const fullPath = path.join(folderPath, item);
-        const stats = fs.statSync(fullPath);
-        const isDirectory = stats.isDirectory();
-
-        const entry = {
-            name: item,
-            path: fullPath,
-            isDirectory: isDirectory,
-            size: isDirectory ? null : stats.size,
-            extension: isDirectory ? null : path.extname(item).toLowerCase().substring(1)
-        };
-
-        filesAndFolders.push(entry);
-
-        if (isDirectory) {
-            // Recursively list contents for subdirectories
-            const subContents = listContentsRecursively(fullPath);
-            filesAndFolders = filesAndFolders.concat(subContents);
-        }
-    });
-
-    return filesAndFolders;
-}
 
 function openFolderDialog(event) {
     dialog.showOpenDialog(mainWindow, {
@@ -137,4 +98,4 @@ function openFolderDialog(event) {
     });
 }
 
-module.exports = { createWindow, listFolderContents, listFolders };
+module.exports = { createWindow, listFolderContents };

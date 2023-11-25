@@ -4,23 +4,9 @@ class App {
     constructor() {
 
         window.addEventListener('DOMContentLoaded', () => {
-            // this.render();
             this.setupEventListeners();
         });
     }
-
-    // render() {
-    //     const appElement = document.getElementById('app');
-    //     if (appElement) {
-    //         appElement.innerHTML = `
-    //             <h1>Hello World!</h1>
-    //             <button id="selectFileBtn" style="padding: 10px; background-color: #3498db; color: #fff; border: none; cursor: pointer;">Select Folder</button>
-    //             <div id="folderContents"></div>
-    //         `;
-    //     }
-        
-    // }
-
     setupEventListeners() {
         const selectFileBtn = document.getElementById('selectFileBtn');
         selectFileBtn.addEventListener('click', () => {

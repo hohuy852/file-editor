@@ -1,0 +1,49 @@
+<!-- src/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello Electron App</title>
+    <link rel="stylesheet" href="./renderer/styles/style.css">
+</head>
+
+<body>
+    <div id="app">
+        <h1>Hello World!</h1>
+        <div class="task-bar">
+            <div class="action-buttons">
+                <div class="action-button">
+                    <button id="selectFileBtn">Đổi Tên Files</button>
+                </div>
+                <div class="action-button">
+                    <button id="selectFolderBtn">Đổi Tên Thư Mục</button>
+                </div>
+            </div>
+            <div class="export">
+                <div class="export-button">
+                    <button id="exportBtn">Export Template</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="folderContents">
+            <table>
+                <thead>
+                    <th>Đường dẫn</th>
+                    <th>Tên Cũ</th>
+                    <th>Tên mới</th>
+                    <th>Loại file</th>
+                    <th>Kích thước</th>
+                </thead>
+                <tbody>
+   
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="./renderer/components/App.js"></script>
+</body>
+
+</html>

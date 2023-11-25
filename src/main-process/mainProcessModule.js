@@ -15,7 +15,7 @@ function createWindow() {
             preload: path.join(__dirname, '../renderer/components/App.js')
         }
     });
-
+    mainWindow.maximize()
     const indexPath = path.join(__dirname, '../index.html');
     mainWindow.loadFile(indexPath);
 

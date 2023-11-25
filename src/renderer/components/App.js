@@ -8,7 +8,7 @@ class App {
         });
     }
     setupEventListeners() {
-        const selectFileBtn = document.getElementById('selectFileBtn');
+        const selectFileBtn = document.getElementById('selectFolderBtn');
         selectFileBtn.addEventListener('click', () => {
             console.log("#12312");
             this.selectFolder();

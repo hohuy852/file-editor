@@ -20,7 +20,9 @@ class App {
     }
 
 }
-
+ipcRenderer.on('smallWindow', (event, selectedPath) => { 
+    console.log("321312");
+})
 // Instantiate the App
 const app = new App();
 

@@ -1,4 +1,6 @@
 const { ipcRenderer } = require('electron');
+const path = require('path');
+const fse = require('fs-extra');
 var XLSX = require("xlsx");
 
 class App {
@@ -12,7 +14,6 @@ class App {
         const selectFileBtn = document.getElementById('selectFolderBtn');
         const openDialog = document.getElementById('openDialog');
         const exportButton = document.getElementById('exportBtn');
-        const resultTable = document.getElementById('resultTable');
 
         selectFileBtn.addEventListener('click', () => {
             this.selectFolder();
@@ -23,15 +24,15 @@ class App {
         });
 
         exportButton.addEventListener('click', () => {
-            this.exportExcel(resultTable);
+            this.exportFolder();
+            // this.exportExcel(resultTable);
         });
     }
 
 
-    exportExcel(table) {
-        var workbook = XLSX.utils.table_to_book(table, { sheet: 'sheet-1' });
-        XLSX.writeFile(workbook, 'MyTable.xlsx');
-    }
+    // exportExcel(table) {
+
+    // }
 
 
     importExcel(fileInput) {
@@ -63,7 +64,11 @@ class App {
 
 
     selectFolder() {
-        ipcRenderer.send('openFolderDialog');
+        ipcRenderer.send('chooseEditFolder');
+    }
+
+    exportFolder() {
+        ipcRenderer.send('chooseExportFolder');
     }
 
     displayFolderContents(contents) {
@@ -73,16 +78,21 @@ class App {
 
             // Clear existing table rows
             tableBody.innerHTML = '';
+            // Sort contents by the number of slashes in the path, with more slashes first
+            contents.sort((a, b) => {
+                const slashesA = (a.path.match(/\\/g) || []).length;
+                const slashesB = (b.path.match(/\\/g) || []).length;
 
-            // Loop through contents and create table rows
+                return slashesB - slashesA || a.path.localeCompare(b.path);
+            });
+
+            // Render the sorted contents
             contents.forEach(item => {
-                console.log(item);
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${item.path}</td>
-                    <td>${item.name}</td>
-                    <td contenteditable='true' class="editableCell">${item.newName}</td>
-                `;
+                <td>${item.path}</td>
+                <td>${item.name}</td>
+                <td contenteditable='true' class="editableCell">${item.newName}</td> `;
                 tableBody.appendChild(row);
             });
         }
@@ -98,6 +108,27 @@ class App {
             });
         })
     }
+
+
+    replaceLastDirectoryName(folderPath, replaceString) {
+        try {
+            const parentPath = path.dirname(folderPath);
+            const renamedPath = path.join(parentPath, replaceString);
+
+            console.log('Before renaming - folderPath:', folderPath);
+            console.log('Before renaming - renamedPath:', renamedPath);
+
+            fse.move(folderPath, renamedPath, { overwrite: true }, (error) => {
+                if (error) {
+                    console.error('Error replacing last directory name:', error);
+                } else {
+                    console.log('Last directory name replaced successfully.');
+                }
+            });
+        } catch (error) {
+            console.error('Error replacing last directory name:', error);
+        }
+    }
 }
 
 // Instantiate the App
@@ -112,3 +143,48 @@ ipcRenderer.on('folderContents', (event, contents) => {
 ipcRenderer.on('folderContentsError', (event, error) => {
     console.error('Error getting folder contents:', error);
 });
+// Listen for an error response from the main process
+ipcRenderer.on('exportPath', (event, selectedPath) => {
+    if (selectedPath) {
+        const resultTable = document.getElementById('resultTable');
+        const baseFileName = 'MyTable'; // Use user input or default name
+        const extension = '.xlsx';
+        let fileName = baseFileName + extension;
+        let counter = 1;
+        // Check if the file already exists, if yes, increment the counter
+        while (fse.existsSync(path.join(selectedPath, fileName))) {
+            fileName = `${baseFileName}(${counter})${extension}`;
+            counter++;
+        }
+        const outputPath = path.join(selectedPath, fileName);
+        var workbook = XLSX.utils.table_to_book(resultTable, { sheet: 'sheet-1' });
+        console.log("232");
+        XLSX.writeFile(workbook, outputPath);
+    }
+});
+
+ipcRenderer.on('smallWindow', (event, selectedPath) => {
+    const folderContentsElement = document.getElementById('folderContents');
+    const tableBody = folderContentsElement.querySelector('tbody');
+    console.log("213213");
+    let counter = 1; // Initialize a counter for unique identifiers
+
+    // Iterate over all rows in the table
+    const rows = tableBody.querySelectorAll('tr');
+    rows.forEach(row => {
+        // Get the path from the first cell in the current row
+        const pathCell = row.querySelector('td:first-child');
+        const currentPath = pathCell.textContent;
+
+        // Replace the last directory name in the current path with a unique identifier
+        const newName = "new" + counter;
+        app.replaceLastDirectoryName(currentPath, newName);
+
+        // Update the path cell with the new path
+        pathCell.textContent = path.join(path.dirname(currentPath), newName);
+
+        // Increment the counter for the next iteration
+        counter++;
+    });
+});
+

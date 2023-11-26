@@ -33,20 +33,37 @@ function createWindow() {
 
 
 HandleCreateEdit()
-
+ipcMain.on('handleEditDialog', (event) => {
+   event.reply("smallWindow")
+});
 ipcMain.on('getFolderContents', (event, folderPath) => {
     console.log('Received request to list folder contents:', folderPath);
     listFolderContents(event, folderPath);
 });
-
-ipcMain.on('openFolderDialog', (event) => {
-    openFolderDialog(event);
+ipcMain.on('chooseExportFolder', (event) => {
+    openFolderDialog(event, (selectedFolder) => {
+        returnPath(event, selectedFolder);
+    });
+});
+ipcMain.on('chooseEditFolder', (event) => {
+    openFolderDialog(event, (selectedFolder) => {
+        listFolderContents(event, selectedFolder);
+    });
 });
 
 ipcMain.on('listFolders', (event, folderPath) => {
     console.log('Received request to list folders:', folderPath);
     listFolders(event, folderPath);
 });
+
+function returnPath(event, folderPath) {
+    try {
+        event.reply('exportPath', folderPath);
+    }
+    catch (error) {
+        console.error('Error listing folder contents:', error);
+    }
+}
 
 function listFolderContents(event, folderPath) {
     try {
@@ -65,7 +82,6 @@ function listFolderContents(event, folderPath) {
         event.reply('folderContentsError', error.message);
     }
 }
-
 function listContentsRecursively(folderPath) {
     try {
         const contents = fse.readdirSync(folderPath);
@@ -98,17 +114,34 @@ function listContentsRecursively(folderPath) {
     }
 }
 
-function openFolderDialog(event) {
+let selectedFolder = null;
+
+function openFolderDialog(event, callback) {
     dialog.showOpenDialog(mainWindow, {
         properties: ['openDirectory']
     }).then(result => {
         if (!result.canceled && result.filePaths.length > 0) {
             selectedFolder = result.filePaths[0]; // Assign the selected folder globally
-            listFolderContents(event, selectedFolder);
+            if (callback && typeof callback === 'function') {
+                callback(selectedFolder);
+            }
         }
     }).catch(error => {
         event.reply('folderContentsError', error.message);
     });
 }
-
+// function openFileDialog(event, callback) {
+//     dialog.showOpenDialog(mainWindow, {
+//         properties: ['openFile'],
+//     }).then(result => {
+//         if (!result.canceled && result.filePaths.length > 0) {
+//             selectedFolder = result.filePaths[0]; // Assign the selected folder globally
+//             if (callback && typeof callback === 'function') {
+//                 callback(selectedFolder);
+//             }
+//         }
+//     }).catch(error => {
+//         event.reply('folderContentsError', error.message);
+//     });
+// }
 module.exports = { createWindow, listFolderContents };

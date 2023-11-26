@@ -3,13 +3,18 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fse = require('fs-extra');
 
+// contextBridge.exposeInMainWorld('preloadAPI', {
+//     sendToPreload2: (data) => {
+//         ipcRenderer.sendTo(2, 'message-to-preload2', data);
+//     },
+// });
 
 function createEdit() {
     mainWindow = new BrowserWindow({
         resizable:false,
         width: 400,
         height: 300,
-        autoHideMenuBar: true,
+        // autoHideMenuBar: true,
         minimizable: false,
         maximizable: false,
         skipTaskbar: true,
@@ -31,32 +36,24 @@ function createEdit() {
     return mainWindow; // Return the created window
 }
 function HandleCreateEdit() {
-    ipcMain.on('handleEditDialog', (event) => {
-        createEdit()
-    });
-    ipcMain.on('testfunction', (event, newName) => {
-        replaceLastDirectoryName('D:/renamed/taba', newName)
+    // ipcMain.on('handleEditDialog', (event) => {
+    //     createEdit()
+    // });
+    ipcMain.on('testfunction', (event) => {
+        console.log("@!#123");
+        smallWindow(event, 'sdsd');
     });
 
-    function replaceLastDirectoryName(folderPath, replaceString) {
+    function smallWindow( event, text){
         try {
-            const parentPath = path.dirname(folderPath);
-            const renamedPath = path.join(parentPath, replaceString);
-
-            console.log('Before renaming - folderPath:', folderPath);
-            console.log('Before renaming - renamedPath:', renamedPath);
-
-            fse.move(folderPath, renamedPath, { overwrite: true }, (error) => {
-                if (error) {
-                    console.error('Error replacing last directory name:', error);
-                } else {
-                    console.log('Last directory name replaced successfully.');
-                }
-            });
-        } catch (error) {
-            console.error('Error replacing last directory name:', error);
+            event.reply('smallWindow', text);
+        }
+        catch (error) {
+            console.error('Error listing folder contents:', error);
         }
     }
+    // replaceLastDirectoryName('D:/renamed/taba', newName)
+
 }
 
 module.exports = { HandleCreateEdit };

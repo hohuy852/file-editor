@@ -34,16 +34,14 @@ function createWindow() {
 
 HandleCreateEdit()
 ipcMain.on('handleEditDialog', (event) => {
-   event.reply("smallWindow")
+    event.reply("smallWindow")
 });
 ipcMain.on('getFolderContents', (event, folderPath) => {
     console.log('Received request to list folder contents:', folderPath);
     listFolderContents(event, folderPath);
 });
 ipcMain.on('chooseExportFolder', (event) => {
-    openFolderDialog(event, (selectedFolder) => {
-        returnPath(event, selectedFolder);
-    });
+    openFileDialog(event)
 });
 ipcMain.on('chooseEditFolder', (event) => {
     openFolderDialog(event, (selectedFolder) => {
@@ -130,18 +128,35 @@ function openFolderDialog(event, callback) {
         event.reply('folderContentsError', error.message);
     });
 }
-// function openFileDialog(event, callback) {
-//     dialog.showOpenDialog(mainWindow, {
-//         properties: ['openFile'],
-//     }).then(result => {
-//         if (!result.canceled && result.filePaths.length > 0) {
-//             selectedFolder = result.filePaths[0]; // Assign the selected folder globally
-//             if (callback && typeof callback === 'function') {
-//                 callback(selectedFolder);
-//             }
-//         }
-//     }).catch(error => {
-//         event.reply('folderContentsError', error.message);
-//     });
-// }
+function openFileDialog(event) {
+    // Resolves to a Promise<Object> 
+    dialog.showSaveDialog({
+        title: 'Select the File Path to save',
+        defaultPath: path.join(__dirname, '../assets/sample.txt'),
+        // defaultPath: path.join(__dirname, '../assets/'), 
+        buttonLabel: 'Save',
+        // Restricting the user to only Text Files. 
+        filters: [
+            {
+                name: 'Text Files',
+                extensions: ['txt', 'docx']
+            },],
+        properties: []
+    }).then(file => {
+        // Stating whether dialog operation was cancelled or not. 
+        console.log(file.canceled);
+        if (!file.canceled) {
+            console.log(file.filePath.toString());
+
+            // Creating and Writing to the sample.txt file 
+            fs.writeFile(file.filePath.toString(),
+                'This is a Sample File', function (err) {
+                    if (err) throw err;
+                    console.log('Saved!');
+                });
+        }
+    }).catch(err => {
+        console.log(err)
+    });
+}
 module.exports = { createWindow, listFolderContents };

@@ -1,5 +1,4 @@
 const { ipcRenderer } = require('electron');
-
 class App {
     constructor() {
 
@@ -10,16 +9,13 @@ class App {
     setupEventListeners() {
         const selectFileBtn = document.getElementById('selectFolderBtn');
         const openDialog = document.getElementById('openDialog');
-        const test = document.getElementById('test');
+
         selectFileBtn.addEventListener('click', () => {
             this.selectFolder();
         });
         openDialog.addEventListener('click', () => {
             this.editDialog();
         });
-        // new DataTable('#resultTable', {
-        //     // config options...
-        // });
     }
 
     editDialog() {

@@ -1,13 +1,18 @@
 // src/main-process/mainProcessModule.js
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
-const fs = require('fs');
 const path = require('path');
 
 
 function createEdit() {
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 400,
+        height: 300,
+        autoHideMenuBar: true,
+        minimizable: false,
+        maximizable: false,
+        modal: true,
+        show: false,
+        skipTaskbar: true,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -35,6 +40,6 @@ function HandleCreateEdit (){
     ipcMain.on('testfunction', (event) => {
         console.log("redsdas")
     });
-    
+
 }
 module.exports = { HandleCreateEdit };

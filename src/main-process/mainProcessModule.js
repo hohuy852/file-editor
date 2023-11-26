@@ -41,7 +41,10 @@ ipcMain.on('getFolderContents', (event, folderPath) => {
     listFolderContents(event, folderPath);
 });
 ipcMain.on('chooseExportFolder', (event) => {
-    openFileDialog(event)
+    // openFileDialog(event)
+    openFolderDialog(event, (selectedFolder) => {
+        returnPath(event, selectedFolder);
+    });
 });
 ipcMain.on('chooseEditFolder', (event) => {
     openFolderDialog(event, (selectedFolder) => {

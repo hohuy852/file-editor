@@ -40,13 +40,27 @@ class App {
                 row.innerHTML = `
                     <td>${item.path}</td>
                     <td>${item.name}</td>
-                    <td>${item.newName}</td>
+                    <td contenteditable='true' id="editableCell">${item.newName}</td>
                     <td>${item.fileType}</td>
-                    <td>${item.size}</td>
+                    <td >${item.size}</td>
                 `;
                 tableBody.appendChild(row);
             });
         }
+        const editableCell = document.getElementById('editableCell');
+
+        editableCell.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                if (!e) {
+                    e = window.event;
+                }
+                if (e.preventDefault) {
+                    e.preventDefault();
+                } else {
+                    e.returnValue = false;
+                }
+            }
+        });
     }
 }
 

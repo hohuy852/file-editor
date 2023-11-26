@@ -58,7 +58,7 @@ function listFolderContents(event, folderPath) {
         const filteredTree = dirTree(folderPath);
 
         console.log('Directories:', directories);
-        console.log('filteredTree:', filteredTree);
+        // console.log('filteredTree:', filteredTree);
         event.reply('folderContents', directories);
     } catch (error) {
         console.error('Error listing folder contents:', error);
@@ -75,7 +75,6 @@ function listContentsRecursively(folderPath) {
             const fullPath = path.join(folderPath, item);
             const stats = fse.statSync(fullPath);
             const isDirectory = stats.isDirectory();
-
             if (isDirectory) {
                 const entry = {
                     name: item,

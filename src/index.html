@@ -16,6 +16,7 @@
             <div class="action-buttons">
                 <div class="action-button">
                     <button id="selectFolderBtn">Tải Thư Mục</button>
+                    <button id="openDialog">Tải Thư Mục</button>
                 </div>
                 <div class="action-button">
                     <button id="selectFileBtn">Tải Files</button>
@@ -29,7 +30,7 @@
         </div>
 
         <div id="folderContents">
-            <table>
+            <table id="resultTable" class="table table-striped">
                 <thead>
                     <th>Đường dẫn</th>
                     <th>Tên Cũ</th>
@@ -38,12 +39,11 @@
                     <th>Kích thước</th>
                 </thead>
                 <tbody>
-   
+
                 </tbody>
             </table>
         </div>
     </div>
-    <script src="./renderer/components/App.js"></script>
 </body>
 
 </html>

@@ -9,12 +9,22 @@ class App {
     }
     setupEventListeners() {
         const selectFileBtn = document.getElementById('selectFolderBtn');
+        const openDialog = document.getElementById('openDialog');
+        const test = document.getElementById('test');
         selectFileBtn.addEventListener('click', () => {
-            console.log("#12312");
             this.selectFolder();
         });
+        openDialog.addEventListener('click', () => {
+            this.editDialog();
+        });
+        // new DataTable('#resultTable', {
+        //     // config options...
+        // });
     }
 
+    editDialog() {
+        ipcRenderer.send('handleEditDialog');
+    }
     selectFolder() {
         ipcRenderer.send('openFolderDialog');
     }

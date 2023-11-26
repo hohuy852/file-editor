@@ -21,8 +21,10 @@
     "nodemon": "^2.0.15"
   },
   "dependencies": {
+    "datatables.net-dt": "^1.13.8",
     "electron-squirrel-startup": "^1.0.0",
     "fs": "^0.0.1-security",
+    "jquery": "^3.7.1",
     "path": "^0.12.7"
   }
 }

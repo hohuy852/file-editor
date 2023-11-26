@@ -2,7 +2,9 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fse = require('fs-extra');
 const path = require('path');
-const { HandleCreateEdit } = require('./Module/FolderNameEditModule');
+const { HandleCreateEdit } = require('./Module/FolderNameEdit');
+const dirTree = require("directory-tree");
+
 
 let mainWindow;
 app.disableHardwareAcceleration();
@@ -27,31 +29,10 @@ function createWindow() {
 
     return mainWindow; // Return the created window
 }
-function createEdit() {
-    mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
-            preload: path.join(__dirname, '../renderer/components/Edit.js'),
-            enableRemoteModule: true,
-        }
 
-    });
-    const indexPath = path.join(__dirname, '../edit.html');
-    mainWindow.loadFile(indexPath);
 
-    // Set mainWindow to null when the window is closed
-    mainWindow.on('closed', () => {
-        mainWindow = null;
-    });
-
-    return mainWindow; // Return the created window
-}
 
 HandleCreateEdit()
-
 
 ipcMain.on('getFolderContents', (event, folderPath) => {
     console.log('Received request to list folder contents:', folderPath);
@@ -70,9 +51,14 @@ ipcMain.on('listFolders', (event, folderPath) => {
 function listFolderContents(event, folderPath) {
     try {
         console.log('Listing folder contents:', folderPath);
+
+
         const directories = listContentsRecursively(folderPath);
 
+        const filteredTree = dirTree(folderPath);
+
         console.log('Directories:', directories);
+        console.log('filteredTree:', filteredTree);
         event.reply('folderContents', directories);
     } catch (error) {
         console.error('Error listing folder contents:', error);
@@ -125,28 +111,6 @@ function openFolderDialog(event) {
     }).catch(error => {
         event.reply('folderContentsError', error.message);
     });
-}
-
-function replaceDirectoryNames(folderPath, replaceString) {
-    try {
-        const contents = fse.readdirSync(folderPath);
-        contents.forEach((item) => {
-            const fullPath = path.join(folderPath, item);
-            const stats = fse.statSync(fullPath);
-            const isDirectory = stats.isDirectory();
-
-            if (isDirectory) {
-                const renamedPath = path.join(folderPath, item.replace(item, replaceString));
-                fse.renameSync(fullPath, renamedPath);
-
-                // Recursively replace contents for subdirectories
-                replaceDirectoryNames(renamedPath, replaceString);
-            }
-        });
-        console.log('Directory names replaced successfully.');
-    } catch (error) {
-        console.error('Error replacing directory names:', error);
-    }
 }
 
 module.exports = { createWindow, listFolderContents };

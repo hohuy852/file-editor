@@ -7,16 +7,16 @@ class App {
     }
     setupEventListeners() {
         const test = document.getElementById('test');
-        test.addEventListener('click', () => {
-            console.log("#12312");
-            this.test();
+        test.addEventListener('click', (e) => {
+            const newName = document.querySelector('#name').value;
+            e.preventDefault()
+            this.test(newName);
         });
-
-    
     }
 
-    test() {
-        ipcRenderer.send('testfunction');
+    test(name) {
+
+        ipcRenderer.send('testfunction', name);
     }
 
 }

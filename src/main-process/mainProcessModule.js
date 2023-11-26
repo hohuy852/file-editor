@@ -80,8 +80,7 @@ function listContentsRecursively(folderPath) {
                     name: item,
                     path: fullPath,
                     isDirectory: isDirectory,
-                    size: null,
-                    extension: null
+                    newName: '',
                 };
 
                 directories.push(entry);

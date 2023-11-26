@@ -25,16 +25,19 @@
                 <div class="export-button">
                     <button id="exportBtn">Export Template</button>
                 </div>
+                <div class="export-button">
+                    <button id="importBtn" disabled>Import Template</button>
+                </div>
             </div>
         </div>
         <div>
-            <button id="deleteFolder">Tạo thư muc</button>
+            <button id="createFolder" disabled>Tạo thư muc</button>
         </div>
         <div>
-            <button id="deleteFolder">Xóa thư muc</button>
+            <button id="deleteFolder" disabled>Xóa thư muc</button>
         </div>
         <div>
-            <button id="openDialog">Sửa tên</button>
+            <button id="openDialog">Sửa tên hàng loạt</button>
         </div>
         <div id="folderContents">
             <table id="resultTable" class="table table-striped">
@@ -42,8 +45,6 @@
                     <th>Đường dẫn</th>
                     <th>Tên Cũ</th>
                     <th>Tên mới</th>
-                    <th>Loại file</th>
-                    <th>Kích thước</th>
                 </thead>
                 <tbody>
 

@@ -163,28 +163,31 @@ ipcRenderer.on('exportPath', (event, selectedPath) => {
     }
 });
 
-ipcRenderer.on('smallWindow', (event, selectedPath) => {
-    const folderContentsElement = document.getElementById('folderContents');
-    const tableBody = folderContentsElement.querySelector('tbody');
-    console.log("213213");
-    let counter = 1; // Initialize a counter for unique identifiers
+// ipcRenderer.on('smallWindow', (event, selectedPath) => {
+//     const folderContentsElement = document.getElementById('folderContents');
+//     const tableBody = folderContentsElement.querySelector('tbody');
+//     console.log("213213");
+//     let counter = 1; // Initialize a counter for unique identifiers
 
-    // Iterate over all rows in the table
-    const rows = tableBody.querySelectorAll('tr');
-    rows.forEach(row => {
-        // Get the path from the first cell in the current row
-        const pathCell = row.querySelector('td:first-child');
-        const currentPath = pathCell.textContent;
+//     // Iterate over all rows in the table
+//     const rows = tableBody.querySelectorAll('tr');
+//     rows.forEach(row => {
+//         // Get the path from the first cell in the current row
+//         const pathCell = row.querySelector('td:first-child');
+//         const currentPath = pathCell.textContent;
 
-        // Replace the last directory name in the current path with a unique identifier
-        const newName = "new" + counter;
-        app.replaceLastDirectoryName(currentPath, newName);
+//         // Replace the last directory name in the current path with a unique identifier
+//         const newName = "new" + counter;
+//         app.replaceLastDirectoryName(currentPath, newName);
 
-        // Update the path cell with the new path
-        pathCell.textContent = path.join(path.dirname(currentPath), newName);
+//         // Update the path cell with the new path
+//         pathCell.textContent = path.join(path.dirname(currentPath), newName);
 
-        // Increment the counter for the next iteration
-        counter++;
-    });
-});
+//         // Increment the counter for the next iteration
+//         counter++;
+//     });
+// });
 
+ipcRenderer.on("smallWindow", (event) => {
+    console.log("asdsd")
+})

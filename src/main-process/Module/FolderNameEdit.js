@@ -17,7 +17,7 @@ function createEdit() {
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
-            preload: path.join(__dirname, '../../renderer/prelaods/Edit.js'),
+            preload: path.join(__dirname, '../../renderer/preloads/Edit.js'),
             enableRemoteModule: true,
         }
 
@@ -30,24 +30,13 @@ function createEdit() {
     });
     return mainWindow; // Return the created window
 }
-function HandleCreateEdit() {
-    // ipcMain.on('handleEditDialog', (event) => {
-    //     createEdit()
-    // });
-    ipcMain.on('testfunction', (event) => {
-        console.log("@!#123");
-        smallWindow(event, 'sdsd');
+function HandleCreateEdit(mainWindow) {
+    ipcMain.on('handleEditDialog', (event) => {
+        createEdit()
     });
-
-    function smallWindow( event, text){
-        try {
-            event.reply('smallWindow', text);
-        }
-        catch (error) {
-            console.error('Error listing folder contents:', error);
-        }
-    }
-    // replaceLastDirectoryName('D:/renamed/taba', newName)
+    ipcMain.on('testfunction', (event) => {
+        mainWindow.webContents.send('smallWindow');
+    });
 
 }
 

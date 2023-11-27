@@ -15,7 +15,7 @@ function createWindow() {
         height: 600,
         webPreferences: {
             nodeIntegration: true,
-            preload: path.join(__dirname, '../renderer/components/App.js')
+            preload: path.join(__dirname, '../renderer/preloads/App.js')
         }
     });
     mainWindow.maximize()
@@ -32,7 +32,9 @@ function createWindow() {
 
 
 
-HandleCreateEdit()
+HandleCreateEdit(mainWindow)
+
+
 ipcMain.on('handleEditDialog', (event) => {
     event.reply("smallWindow")
 });

@@ -15,7 +15,7 @@ class App {
     }
 
     test(name) {
-        ipcRenderer.send('onChangeName', name);
+        ipcRenderer.send('changeName', name);
     }
 
 }

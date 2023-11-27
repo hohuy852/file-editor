@@ -34,6 +34,10 @@ function createWindow() {
 
 HandleCreateEdit()
 
+ipcMain.on('export', (event) => {
+    openSaveDialog(event)
+})
+
 ipcMain.on('changeName', (event, name) => {
     mainWindow.webContents.send('changeFolderName', name);
 });
@@ -43,10 +47,10 @@ ipcMain.on('getFolderContents', (event, folderPath) => {
     listFolderContents(event, folderPath);
 });
 ipcMain.on('chooseExportFolder', (event) => {
-    // openFileDialog(event)
-    openFolderDialog(event, (selectedFolder) => {
-        returnPath(event, selectedFolder);
-    });
+    openFileDialog(event)
+    // openFolderDialog(event, (selectedFolder) => {
+    //     returnPath(event, selectedFolder);
+    // });
 });
 ipcMain.on('chooseEditFolder', (event) => {
     openFolderDialog(event, (selectedFolder) => {
@@ -59,14 +63,7 @@ ipcMain.on('listFolders', (event, folderPath) => {
     listFolders(event, folderPath);
 });
 
-function returnPath(event, folderPath) {
-    try {
-        event.reply('exportPath', folderPath);
-    }
-    catch (error) {
-        console.error('Error listing folder contents:', error);
-    }
-}
+
 
 function listFolderContents(event, folderPath) {
     try {
@@ -133,35 +130,27 @@ function openFolderDialog(event, callback) {
         event.reply('folderContentsError', error.message);
     });
 }
-function openFileDialog(event) {
-    // Resolves to a Promise<Object> 
+function openSaveDialog(event) {
     dialog.showSaveDialog({
         title: 'Select the File Path to save',
-        defaultPath: path.join(__dirname, '../assets/sample.txt'),
-        // defaultPath: path.join(__dirname, '../assets/'), 
+        defaultPath: path.join(__dirname, '../assets/sample.xlsx'),
         buttonLabel: 'Save',
-        // Restricting the user to only Text Files. 
         filters: [
             {
-                name: 'Text Files',
-                extensions: ['txt', 'docx']
-            },],
+                name: 'Excel File',
+                extensions: ['xlsx']
+            },
+        ],
         properties: []
     }).then(file => {
-        // Stating whether dialog operation was cancelled or not. 
-        console.log(file.canceled);
         if (!file.canceled) {
-            console.log(file.filePath.toString());
-
-            // Creating and Writing to the sample.txt file 
-            fs.writeFile(file.filePath.toString(),
-                'This is a Sample File', function (err) {
-                    if (err) throw err;
-                    console.log('Saved!');
-                });
+            event.reply('savePath', file.filePath.toString())
+            return file.filePath.toString();
         }
+        return null;
     }).catch(err => {
-        console.log(err)
+        console.log(err);
+        return null;
     });
 }
 module.exports = { createWindow, listFolderContents };

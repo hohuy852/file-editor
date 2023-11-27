@@ -1,4 +1,4 @@
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, dialog } = require('electron');
 const path = require('path');
 const fse = require('fs-extra');
 var XLSX = require("xlsx");
@@ -24,7 +24,7 @@ class App {
         });
 
         exportButton.addEventListener('click', () => {
-            this.exportFolder();
+            this.saveExportFile();
             // this.exportExcel(resultTable);
         });
     }
@@ -62,7 +62,9 @@ class App {
         ipcRenderer.send('handleEditDialog');
     }
 
-
+    saveExportFile() {
+        ipcRenderer.send('export');
+    }
     selectFolder() {
         ipcRenderer.send('chooseEditFolder');
     }
@@ -129,6 +131,8 @@ class App {
             console.error('Error replacing last directory name:', error);
         }
     }
+
+ 
 }
 
 // Instantiate the App
@@ -144,23 +148,21 @@ ipcRenderer.on('folderContentsError', (event, error) => {
     console.error('Error getting folder contents:', error);
 });
 // Listen for an error response from the main process
-ipcRenderer.on('exportPath', (event, selectedPath) => {
-    if (selectedPath) {
-        const resultTable = document.getElementById('resultTable');
-        const baseFileName = 'MyTable'; // Use user input or default name
-        const extension = '.xlsx';
-        let fileName = baseFileName + extension;
-        let counter = 1;
-        // Check if the file already exists, if yes, increment the counter
-        while (fse.existsSync(path.join(selectedPath, fileName))) {
-            fileName = `${baseFileName}(${counter})${extension}`;
-            counter++;
-        }
-        const outputPath = path.join(selectedPath, fileName);
+ipcRenderer.on('savePath', async (event, filePath) => {
+    const resultTable = document.getElementById('resultTable');
+
+    // Open save dialog and get the selected file path
+    if (filePath) {
         var workbook = XLSX.utils.table_to_book(resultTable, { sheet: 'sheet-1' });
-        console.log("232");
-        XLSX.writeFile(workbook, outputPath);
-    }
+
+        // Use the selected file path for saving the file
+        XLSX.writeFile(workbook, filePath);
+
+        // Optionally, you can update outputPath or perform other actions with the file path
+        console.log('File saved at:', filePath);
+    } else {
+        console.log('Export canceled or encountered an error.');
+    };
 });
 
 ipcRenderer.on('changeFolderName', (event, name) => {

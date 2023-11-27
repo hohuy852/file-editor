@@ -3,11 +3,6 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fse = require('fs-extra');
 
-// contextBridge.exposeInMainWorld('preloadAPI', {
-//     sendToPreload2: (data) => {
-//         ipcRenderer.sendTo(2, 'message-to-preload2', data);
-//     },
-// });
 
 function createEdit() {
     mainWindow = new BrowserWindow({
@@ -22,7 +17,7 @@ function createEdit() {
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
-            preload: path.join(__dirname, '../../renderer/components/Edit.js'),
+            preload: path.join(__dirname, '../../renderer/prelaods/Edit.js'),
             enableRemoteModule: true,
         }
 

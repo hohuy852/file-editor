@@ -34,10 +34,6 @@ function HandleCreateEdit(mainWindow) {
     ipcMain.on('handleEditDialog', (event) => {
         createEdit()
     });
-    ipcMain.on('testfunction', (event) => {
-        mainWindow.webContents.send('smallWindow');
-    });
-
 }
 
 module.exports = { HandleCreateEdit };

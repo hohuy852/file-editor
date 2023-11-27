@@ -32,12 +32,12 @@ function createWindow() {
 
 
 
-HandleCreateEdit(mainWindow)
+HandleCreateEdit()
 
-
-ipcMain.on('handleEditDialog', (event) => {
-    event.reply("smallWindow")
+ipcMain.on('changeName', (event, name) => {
+    mainWindow.webContents.send('changeFolderName', name);
 });
+
 ipcMain.on('getFolderContents', (event, folderPath) => {
     console.log('Received request to list folder contents:', folderPath);
     listFolderContents(event, folderPath);

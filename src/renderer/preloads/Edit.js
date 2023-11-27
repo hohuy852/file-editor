@@ -15,14 +15,11 @@ class App {
     }
 
     test(name) {
-
-        ipcRenderer.send('testfunction', name);
+        ipcRenderer.send('onChangeName', name);
     }
 
 }
-ipcRenderer.on('smallWindow', (event, selectedPath) => { 
-    console.log("321312");
-})
+
 // Instantiate the App
 const app = new App();
 

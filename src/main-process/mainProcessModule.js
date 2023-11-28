@@ -43,15 +43,9 @@ ipcMain.on('changeName', (event, name) => {
 });
 
 ipcMain.on('getFolderContents', (event, folderPath) => {
-    console.log('Received request to list folder contents:', folderPath);
     listFolderContents(event, folderPath);
 });
-ipcMain.on('chooseExportFolder', (event) => {
-    openFileDialog(event)
-    // openFolderDialog(event, (selectedFolder) => {
-    //     returnPath(event, selectedFolder);
-    // });
-});
+
 ipcMain.on('chooseEditFolder', (event) => {
     openFolderDialog(event, (selectedFolder) => {
         listFolderContents(event, selectedFolder);
@@ -62,7 +56,9 @@ ipcMain.on('listFolders', (event, folderPath) => {
     console.log('Received request to list folders:', folderPath);
     listFolders(event, folderPath);
 });
-
+ipcMain.on('openFile', (event) => {
+    openFileDialog(event)
+})
 
 
 function listFolderContents(event, folderPath) {
@@ -130,6 +126,28 @@ function openFolderDialog(event, callback) {
         event.reply('folderContentsError', error.message);
     });
 }
+
+let selectedFile = null;
+
+function openFileDialog(event, callback) {
+    dialog.showOpenDialog(mainWindow, {
+        properties: ['openFile']
+    })
+    .then(result => {
+        if (result.canceled) {
+            // User canceled the dialog
+            event.reply('openDialogCanceled');
+        } else if (result.filePaths.length > 0) {
+            selectedFile = result.filePaths[0]; // Assign the selected file globally
+            event.reply('selectedFile', selectedFile);
+        }
+    })
+    .catch(error => {
+        console.error('Error listing folder contents:', error);
+        throw error;
+    });
+}
+   
 function openSaveDialog(event) {
     dialog.showSaveDialog({
         title: 'Select the File Path to save',

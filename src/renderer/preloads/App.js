@@ -10,13 +10,17 @@ class App {
     });
   }
   setupEventListeners() {
-    const selectFolderBtn = document.getElementById("selectFolderBtn");
+    const listFolderBtn = document.getElementById("listFolderBtn");
+    const listFile = document.getElementById("listFileBtn");
     const importBtn = document.getElementById("importBtn");
     const openDialog = document.getElementById("openDialog");
     const exportButton = document.getElementById("exportBtn");
 
-    selectFolderBtn.addEventListener("click", () => {
-      this.selectFolder();
+    listFolderBtn.addEventListener("click", () => {
+      this.listFolder();
+    });
+    listFile.addEventListener("click", () => {
+      this.listFile();
     });
     importBtn.addEventListener("click", () => {
       this.openFile();
@@ -58,8 +62,11 @@ class App {
   saveExportFile() {
     ipcRenderer.send("export");
   }
-  selectFolder() {
-    ipcRenderer.send("chooseEditFolder");
+  listFolder() {
+    ipcRenderer.send("listFolder");
+  }
+  listFile() {
+    ipcRenderer.send("listFile");
   }
   openFile() {
     ipcRenderer.send("openFile");
@@ -85,11 +92,17 @@ class App {
 
       // Render the sorted contents
       contents.forEach((item) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-                <td>${item.path}</td>
-                <td>${item.name}</td>
-                <td contenteditable='true' class="editableCell">${item.newName}</td> `;
+        const row = document.createElement('tr');
+        let innerHTML = `<td>${item.path}</td>
+                         <td>${item.name}</td>`;
+
+        if (item.extension) {
+          innerHTML += `<td>${item.extension}</td>`;
+        }
+
+        innerHTML += `<td contenteditable='true' class="editableCell">${item.newName}</td>`;
+        row.innerHTML = innerHTML;
+
         tableBody.appendChild(row);
       });
     }
@@ -134,7 +147,10 @@ const app = new App();
 ipcRenderer.on("folderContents", (event, contents) => {
   app.displayFolderContents(contents);
 });
-
+// Listen for the response from the main process to display folder contents
+ipcRenderer.on("filesList", (event, contents) => {
+  app.displayFolderContents(contents);
+});
 // Listen for an error response from the main process
 ipcRenderer.on("folderContentsError", (event, error) => {
   console.error("Error getting folder contents:", error);
@@ -161,7 +177,6 @@ ipcRenderer.on("savePath", async (event, filePath) => {
 ipcRenderer.on("changeFolderName", (event, name) => {
   const folderContentsElement = document.getElementById("folderContents");
   const tableBody = folderContentsElement.querySelector("tbody");
-  console.log("213213");
   let counter = 1; // Initialize a counter for unique identifiers
 
   // Iterate over all rows in the table
@@ -183,27 +198,27 @@ ipcRenderer.on("changeFolderName", (event, name) => {
   });
 });
 
-ipcRenderer.on('selectedFile', (event, filePath)=>{
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const data = e.target.result;
-      const workbook = XLSX.read(data, { type: "binary" });
+ipcRenderer.on('selectedFile', (event, filePath) => {
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const data = e.target.result;
+    const workbook = XLSX.read(data, { type: "binary" });
 
-      // Assuming you have a single sheet in the workbook
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
+    // Assuming you have a single sheet in the workbook
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
 
-      // Convert the sheet data to a JSON object
-      const jsonData = XLSX.utils.sheet_to_json(sheet);
+    // Convert the sheet data to a JSON object
+    const jsonData = XLSX.utils.sheet_to_json(sheet);
 
-      // Convert JSON data to HTML table
-      const htmlTable = app.updateTable(jsonData);
+    // Convert JSON data to HTML table
+    const htmlTable = app.updateTable(jsonData);
 
-      // Log or use the HTML table as needed
-      console.log(htmlTable);
-    };
+    // Log or use the HTML table as needed
+    console.log(htmlTable);
+  };
 
-    // Read the selected file
-    const file = fse.readFileSync(filePath);
-    reader.readAsBinaryString(new Blob([file]));
+  // Read the selected file
+  const file = fse.readFileSync(filePath);
+  reader.readAsBinaryString(new Blob([file]));
 })

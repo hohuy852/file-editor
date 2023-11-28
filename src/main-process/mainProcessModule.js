@@ -43,30 +43,86 @@ ipcMain.on('changeName', (event, name) => {
 });
 
 ipcMain.on('getFolderContents', (event, folderPath) => {
-    listFolderContents(event, folderPath);
+    listFolder(event, folderPath);
 });
 
-ipcMain.on('chooseEditFolder', (event) => {
+ipcMain.on('listFile', (event) => {
     openFolderDialog(event, (selectedFolder) => {
-        listFolderContents(event, selectedFolder);
+        listFile(event, selectedFolder);
+    });
+});
+
+ipcMain.on('listFolder', (event) => {
+    openFolderDialog(event, (selectedFolder) => {
+        listFolder(event, selectedFolder);
     });
 });
 
 ipcMain.on('listFolders', (event, folderPath) => {
     console.log('Received request to list folders:', folderPath);
-    listFolders(event, folderPath);
+    listFolder(event, folderPath);
 });
 ipcMain.on('openFile', (event) => {
     openFileDialog(event)
 })
 
+function listFile(event, folderPath) {
+    try {
+        console.log('Listing folder contents:', folderPath);
 
-function listFolderContents(event, folderPath) {
+        const files = listFilesRecursively(folderPath);
+
+        console.log('Files:', files);
+        // If you have a specific function for directory listing, you can call it here.
+        // const filteredTree = dirTree(folderPath);
+
+        event.reply('filesList', files);
+    } catch (error) {
+        console.error('Error listing folder contents:', error);
+        event.reply('filesListError', error.message);
+    }
+}
+function listFilesRecursively(folderPath) {
+    try {
+        const contents = fse.readdirSync(folderPath);
+        let files = [];
+
+        contents.forEach((item) => {
+            const fullPath = path.join(folderPath, item);
+            const stats = fse.statSync(fullPath);
+            const isDirectory = stats.isDirectory();
+
+            if (!isDirectory) {
+                const extension = path.extname(item).slice(1); // Get file extension (excluding the dot)
+
+                const entry = {
+                    name: item,
+                    path: fullPath,
+                    extension: extension,
+                };
+
+                files.push(entry);
+            } else {
+                // Recursively list contents for subdirectories
+                const subFiles = listFilesRecursively(fullPath);
+                files = files.concat(subFiles);
+            }
+        });
+
+        return files;
+    } catch (error) {
+        console.error('Error listing folder contents:', error);
+        throw error;
+    }
+}
+
+
+function listFolder(event, folderPath) {
     try {
         console.log('Listing folder contents:', folderPath);
 
 
-        const directories = listContentsRecursively(folderPath);
+        const directories = listFolderRecursively(folderPath);
 
         const filteredTree = dirTree(folderPath);
 
@@ -78,7 +134,7 @@ function listFolderContents(event, folderPath) {
         event.reply('folderContentsError', error.message);
     }
 }
-function listContentsRecursively(folderPath) {
+function listFolderRecursively(folderPath) {
     try {
         const contents = fse.readdirSync(folderPath);
         let directories = [];
@@ -98,7 +154,7 @@ function listContentsRecursively(folderPath) {
                 directories.push(entry);
 
                 // Recursively list contents for subdirectories
-                const subDirectories = listContentsRecursively(fullPath);
+                const subDirectories = listFolderRecursively(fullPath);
                 directories = directories.concat(subDirectories);
             }
         });
@@ -133,21 +189,21 @@ function openFileDialog(event, callback) {
     dialog.showOpenDialog(mainWindow, {
         properties: ['openFile']
     })
-    .then(result => {
-        if (result.canceled) {
-            // User canceled the dialog
-            event.reply('openDialogCanceled');
-        } else if (result.filePaths.length > 0) {
-            selectedFile = result.filePaths[0]; // Assign the selected file globally
-            event.reply('selectedFile', selectedFile);
-        }
-    })
-    .catch(error => {
-        console.error('Error listing folder contents:', error);
-        throw error;
-    });
+        .then(result => {
+            if (result.canceled) {
+                // User canceled the dialog
+                event.reply('openDialogCanceled');
+            } else if (result.filePaths.length > 0) {
+                selectedFile = result.filePaths[0]; // Assign the selected file globally
+                event.reply('selectedFile', selectedFile);
+            }
+        })
+        .catch(error => {
+            console.error('Error listing folder contents:', error);
+            throw error;
+        });
 }
-   
+
 function openSaveDialog(event) {
     dialog.showSaveDialog({
         title: 'Select the File Path to save',
@@ -171,4 +227,4 @@ function openSaveDialog(event) {
         return null;
     });
 }
-module.exports = { createWindow, listFolderContents };
+module.exports = { createWindow, listFolder };

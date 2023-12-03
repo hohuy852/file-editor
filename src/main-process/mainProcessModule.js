@@ -1,6 +1,6 @@
 // src/main-process/mainProcessModule.js
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
-const fse = require('fs-extra');
+const { app, BrowserWindow, ipcMain, dialog,ipcRenderer } = require('electron');
+const fse = require('fs-extra').promises;
 const path = require('path');
 const { HandleCreateEdit } = require('./Module/FolderNameEdit');
 const dirTree = require("directory-tree");
@@ -65,16 +65,17 @@ ipcMain.on('listFolders', (event, folderPath) => {
 ipcMain.on('openFile', (event) => {
     openFileDialog(event)
 })
-
-function listFile(event, folderPath) {
+ipcMain.on('progressUpdate', (event, data) => {
+    // Send the reply to the preload script
+    mainWindow.webContents.sendToFrame('yourFrameName', 'progressUpdate', data);
+});
+async function listFile(event, folderPath) {
     try {
         console.log('Listing folder contents:', folderPath);
 
-        const files = listFilesRecursively(folderPath);
+        const files = await listFilesRecursively(folderPath, event);
 
         console.log('Files:', files);
-        // If you have a specific function for directory listing, you can call it here.
-        // const filteredTree = dirTree(folderPath);
 
         event.reply('filesList', files);
     } catch (error) {
@@ -82,18 +83,21 @@ function listFile(event, folderPath) {
         event.reply('filesListError', error.message);
     }
 }
-function listFilesRecursively(folderPath) {
+
+async function listFilesRecursively(folderPath, event) {
+    let timer;
     try {
-        const contents = fse.readdirSync(folderPath);
+        const startTime = Date.now(); // Start the timer when the function is called
+        const contents = await fse.readdir(folderPath);
         let files = [];
 
-        contents.forEach((item) => {
+        for (const [i, item] of contents.entries()) {
             const fullPath = path.join(folderPath, item);
-            const stats = fse.statSync(fullPath);
+            const stats = await fse.stat(fullPath);
             const isDirectory = stats.isDirectory();
 
             if (!isDirectory) {
-                const extension = path.extname(item).slice(1); // Get file extension (excluding the dot)
+                const extension = path.extname(item).slice(1);
 
                 const entry = {
                     name: item,
@@ -104,10 +108,20 @@ function listFilesRecursively(folderPath) {
                 files.push(entry);
             } else {
                 // Recursively list contents for subdirectories
-                const subFiles = listFilesRecursively(fullPath);
+                const subFiles = await listFilesRecursively(fullPath);
                 files = files.concat(subFiles);
             }
-        });
+
+            // Send progress update to the renderer process
+            const progress = ((i + 1) / contents.length) * 100;
+            ipcRenderer.send('progressUpdate', { type: 'file', path: folderPath, progress });
+        }
+
+        // Stop the timer when all files are loaded
+        clearTimeout(timer);
+        const endTime = Date.now();
+        const totalTime = endTime - startTime;
+        console.log('Total time taken:', totalTime, 'ms');
 
         return files;
     } catch (error) {
@@ -116,48 +130,48 @@ function listFilesRecursively(folderPath) {
     }
 }
 
-
-function listFolder(event, folderPath) {
+async function listFolder(event, folderPath) {
     try {
         console.log('Listing folder contents:', folderPath);
 
-
-        const directories = listFolderRecursively(folderPath);
-
-        const filteredTree = dirTree(folderPath);
+        const directories = await listFolderRecursively(folderPath, event);
 
         console.log('Directories:', directories);
-        // console.log('filteredTree:', filteredTree);
         event.reply('folderContents', directories);
     } catch (error) {
         console.error('Error listing folder contents:', error);
         event.reply('folderContentsError', error.message);
     }
 }
-function listFolderRecursively(folderPath) {
+async function listFolderRecursively(folderPath, event) {
     try {
-        const contents = fse.readdirSync(folderPath);
+        const contents = await fse.readdir(folderPath, { withFileTypes: true });
         let directories = [];
 
-        contents.forEach((item) => {
-            const fullPath = path.join(folderPath, item);
-            const stats = fse.statSync(fullPath);
-            const isDirectory = stats.isDirectory();
-            if (isDirectory) {
+        for (const [i, item] of contents.entries()) {
+            const fullPath = path.join(folderPath, item.name);
+
+            if (item.isDirectory()) {
                 const entry = {
-                    name: item,
+                    name: item.name,
                     path: fullPath,
-                    isDirectory: isDirectory,
+                    isDirectory: true,
                     newName: '',
                 };
 
                 directories.push(entry);
 
-                // Recursively list contents for subdirectories
-                const subDirectories = listFolderRecursively(fullPath);
-                directories = directories.concat(subDirectories);
+                // Limit the number of files and folders processed in each iteration
+                if (directories.length <= 100) {
+                    // Recursively list contents for subdirectories
+                    const subDirectories = await listFolderRecursively(fullPath);
+                    directories = directories.concat(subDirectories);
+
+                }
+                const progress = ((i + 1) / contents.length) * 100;
+                console.log(progress);
             }
-        });
+        }
 
         return directories;
     } catch (error) {

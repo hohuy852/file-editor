@@ -19,8 +19,9 @@ class App {
         // Update HTML elements with the received data
         pathElement.textContent = data.folderPath || '';
         percentageElement.textContent = data.percentage ? `${data.percentage}%` : '';
+
         if (loader) {
-            const gradientValue = `linear-gradient(to right, black ${data.overallPercentage}%, white 0%)`;
+            const gradientValue = `linear-gradient(to right, black ${data.percentage}%, white 0%)`;
             loader.style.background = gradientValue;
         }
     }

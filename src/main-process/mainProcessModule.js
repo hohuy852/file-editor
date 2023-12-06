@@ -105,7 +105,6 @@ async function listFile(event, folderPath) {
 }
 
 async function listFilesRecursively(folderPath) {
-    let timer;
     try {
         const startTime = Date.now(); // Start the timer when the function is called
         const contents = await fse.readdir(folderPath);
@@ -137,18 +136,11 @@ async function listFilesRecursively(folderPath) {
             const progress = {
                 folderPath: fullPath,
                 percentage: ((i + 1) / totalFiles) * 100,
-                overallPercentage: ((i + 1) / contents.length) * 100,
             };
             if (loadWindow) {
                 loadWindow.webContents.send('progressUpdate', progress);
             }
         }
-
-        // Stop the timer when all files are loaded
-        clearTimeout(timer);
-        const endTime = Date.now();
-        const totalTime = endTime - startTime;
-        // console.log('Total time taken:', totalTime, 'ms');
 
         return files;
     } catch (error) {

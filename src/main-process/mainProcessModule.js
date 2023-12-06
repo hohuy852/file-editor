@@ -1,5 +1,5 @@
 // src/main-process/mainProcessModule.js
-const { app, BrowserWindow, ipcMain, dialog,ipcRenderer } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fse = require('fs-extra').promises;
 const path = require('path');
 const { HandleCreateEdit } = require('./Module/FolderNameEdit');
@@ -7,7 +7,34 @@ const dirTree = require("directory-tree");
 
 
 let mainWindow;
+let loadWindow;
 app.disableHardwareAcceleration();
+
+function createLoader() {
+    loadWindow = new BrowserWindow({
+        resizable: true,
+        width: 400,
+        height: 300,
+        minimizable: false,
+        maximizable: false,
+        closable: false,
+        skipTaskbar: true,
+        height: 600,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+            preload: path.join(__dirname, '../renderer/preloads/Loader.js'),
+            enableRemoteModule: true,
+        }
+
+    });
+    const indexPath = path.join(__dirname, '../loader.html');
+    loadWindow.loadFile(indexPath);
+    loadWindow.on('closed', () => {
+        loadWindow = null;
+    });
+    return loadWindow; // Return the created window
+}
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -33,7 +60,6 @@ function createWindow() {
 
 
 HandleCreateEdit()
-
 ipcMain.on('export', (event) => {
     openSaveDialog(event)
 })
@@ -65,18 +91,12 @@ ipcMain.on('listFolders', (event, folderPath) => {
 ipcMain.on('openFile', (event) => {
     openFileDialog(event)
 })
-ipcMain.on('progressUpdate', (event, data) => {
-    // Send the reply to the preload script
-    mainWindow.webContents.sendToFrame('yourFrameName', 'progressUpdate', data);
-});
+
+
 async function listFile(event, folderPath) {
     try {
-        console.log('Listing folder contents:', folderPath);
-
+        createLoader();
         const files = await listFilesRecursively(folderPath, event);
-
-        console.log('Files:', files);
-
         event.reply('filesList', files);
     } catch (error) {
         console.error('Error listing folder contents:', error);
@@ -84,12 +104,13 @@ async function listFile(event, folderPath) {
     }
 }
 
-async function listFilesRecursively(folderPath, event) {
+async function listFilesRecursively(folderPath) {
     let timer;
     try {
         const startTime = Date.now(); // Start the timer when the function is called
         const contents = await fse.readdir(folderPath);
         let files = [];
+        let totalFiles = contents.length;
 
         for (const [i, item] of contents.entries()) {
             const fullPath = path.join(folderPath, item);
@@ -113,15 +134,21 @@ async function listFilesRecursively(folderPath, event) {
             }
 
             // Send progress update to the renderer process
-            const progress = ((i + 1) / contents.length) * 100;
-            ipcRenderer.send('progressUpdate', { type: 'file', path: folderPath, progress });
+            const progress = {
+                folderPath: fullPath,
+                percentage: ((i + 1) / totalFiles) * 100,
+                overallPercentage: ((i + 1) / contents.length) * 100,
+            };
+            if (loadWindow) {
+                loadWindow.webContents.send('progressUpdate', progress);
+            }
         }
 
         // Stop the timer when all files are loaded
         clearTimeout(timer);
         const endTime = Date.now();
         const totalTime = endTime - startTime;
-        console.log('Total time taken:', totalTime, 'ms');
+        // console.log('Total time taken:', totalTime, 'ms');
 
         return files;
     } catch (error) {
@@ -132,11 +159,8 @@ async function listFilesRecursively(folderPath, event) {
 
 async function listFolder(event, folderPath) {
     try {
-        console.log('Listing folder contents:', folderPath);
-
+        createLoader();
         const directories = await listFolderRecursively(folderPath, event);
-
-        console.log('Directories:', directories);
         event.reply('folderContents', directories);
     } catch (error) {
         console.error('Error listing folder contents:', error);
@@ -168,8 +192,11 @@ async function listFolderRecursively(folderPath, event) {
                     directories = directories.concat(subDirectories);
 
                 }
-                const progress = ((i + 1) / contents.length) * 100;
-                console.log(progress);
+                const progress = {
+                    folderPath: fullPath,
+                    percentage: ((i + 1) / contents.length) * 100,
+                };
+                mainWindow.webContents.send('progressUpdate', progress);
             }
         }
 

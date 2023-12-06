@@ -222,7 +222,3 @@ ipcRenderer.on('selectedFile', (event, filePath) => {
   const file = fse.readFileSync(filePath);
   reader.readAsBinaryString(new Blob([file]));
 })
-
-ipcRenderer.on('progressUpdate', progress => {
-  console.log(progress)
-})

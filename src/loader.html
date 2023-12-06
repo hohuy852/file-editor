@@ -6,21 +6,23 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./renderer/styles/style.css">
-    <title>Edit Dialog</title>
+    <link rel="stylesheet" href="./renderer/styles/loading/style.css">
+    <title>Đang xử lý</title>
     <style>
         /* Add your styling here */
     </style>
 </head>
 
 <body>
-    <h2>Loading</h2>
-    <div>
-        <p>Path</p> : <p id="path"></p>
-        <p>Percentage</p> : <p id="percentage"></p>
-        <div class="loader"></div>
+    <div class="loading"> 
+        <p>Đường dẫn</p><p id="path"></p>
+        <p>Tiến trình</p>
+        <p class="msg"></p>
+        <div class="load-wrapper">
+            <div class="loader"></div>
+            <p id="percentage"></p>
+        </div>
     </div>
-
 </body>
 
 </html>

@@ -12,14 +12,16 @@ app.disableHardwareAcceleration();
 
 function createLoader() {
     loadWindow = new BrowserWindow({
-        resizable: true,
-        width: 400,
-        height: 300,
+        parent: mainWindow,
+        modal:true,
+        autoHideMenuBar:true,
+        resizable: false,
+        width: 633,
+        height: 228,
         minimizable: false,
         maximizable: false,
         closable: false,
         skipTaskbar: true,
-        height: 600,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -92,15 +94,21 @@ ipcMain.on('openFile', (event) => {
     openFileDialog(event)
 })
 
+function loadedSuccess(){
+
+    loadWindow.webContents.send('loadedSuccess', 'Đã hoàn tất');
+}
 
 async function listFile(event, folderPath) {
     try {
         createLoader();
         const files = await listFilesRecursively(folderPath, event);
         event.reply('filesList', files);
+        loadedSuccess()
     } catch (error) {
         console.error('Error listing folder contents:', error);
         event.reply('filesListError', error.message);
+
     }
 }
 
@@ -135,7 +143,7 @@ async function listFilesRecursively(folderPath) {
             // Send progress update to the renderer process
             const progress = {
                 folderPath: fullPath,
-                percentage: ((i + 1) / totalFiles) * 100,
+                percent: Math.round(((i + 1) / totalFiles) * 100),
             };
             if (loadWindow) {
                 loadWindow.webContents.send('progressUpdate', progress);
@@ -154,15 +162,19 @@ async function listFolder(event, folderPath) {
         createLoader();
         const directories = await listFolderRecursively(folderPath, event);
         event.reply('folderContents', directories);
+        loadedSuccess()
+
     } catch (error) {
         console.error('Error listing folder contents:', error);
         event.reply('folderContentsError', error.message);
     }
 }
-async function listFolderRecursively(folderPath, event) {
+async function listFolderRecursively(folderPath, event, totalItems = 0, processedItems = 0) {
     try {
         const contents = await fse.readdir(folderPath, { withFileTypes: true });
         let directories = [];
+
+        totalItems += contents.length;
 
         for (const [i, item] of contents.entries()) {
             const fullPath = path.join(folderPath, item.name);
@@ -177,18 +189,20 @@ async function listFolderRecursively(folderPath, event) {
 
                 directories.push(entry);
 
-                // Limit the number of files and folders processed in each iteration
-                if (directories.length <= 100) {
-                    // Recursively list contents for subdirectories
-                    const subDirectories = await listFolderRecursively(fullPath);
-                    directories = directories.concat(subDirectories);
+                // Recursively list contents for subdirectories
+                const subDirectories = await listFolderRecursively(fullPath, event, totalItems, processedItems);
+                directories = directories.concat(subDirectories);
 
-                }
+                processedItems++;
+
+                const percent = (processedItems / totalItems) * 100;
                 const progress = {
                     folderPath: fullPath,
-                    percentage: ((i + 1) / contents.length) * 100,
+                    percent: percent.toFixed(2),
                 };
-                mainWindow.webContents.send('progressUpdate', progress);
+                if (loadWindow) {
+                    loadWindow.webContents.send('progressUpdate', progress);
+                }
             }
         }
 

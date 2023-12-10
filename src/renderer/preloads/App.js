@@ -42,11 +42,11 @@ class App {
 
     // Clear existing table rows
     tableBody.innerHTML = "";
+    console.log(jsonData);
 
     // Add new rows based on the JSON data
     jsonData.forEach((row) => {
       const newRow = tableBody.insertRow();
-
       // Assuming the keys in the JSON data match the table headers
       for (const key in row) {
         const cell = newRow.insertCell();
@@ -100,7 +100,7 @@ class App {
           innerHTML += `<td>${item.extension}</td>`;
         }
 
-        innerHTML += `<td contenteditable='true' class="editableCell">${item.newName}</td>`;
+        innerHTML += `<td contenteditable='true' class="editableCell">${item.newName || ""}</td>`;
         row.innerHTML = innerHTML;
 
         tableBody.appendChild(row);
@@ -111,7 +111,6 @@ class App {
     editableCells.forEach((editableCell) => {
       editableCell.addEventListener("keydown", function (event) {
         if (event.key === "Enter") {
-          console.log("asdsad");
           event.returnValue = false;
           if (event.preventDefault) event.preventDefault();
         }
@@ -208,17 +207,18 @@ ipcRenderer.on('selectedFile', (event, filePath) => {
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
 
-    // Convert the sheet data to a JSON object
-    const jsonData = XLSX.utils.sheet_to_json(sheet);
-
-    // Convert JSON data to HTML table
-    const htmlTable = app.updateTable(jsonData);
+    // Convert the sheet data to an HTML table
+    const htmlTable = XLSX.utils.sheet_to_html(sheet);
 
     // Log or use the HTML table as needed
     console.log(htmlTable);
+
+    // You can append the HTML table to a container element in your application
+    // For example, assuming you have a div with id "tableContainer":
+    document.getElementById('folderContents').innerHTML = htmlTable;
   };
 
   // Read the selected file
   const file = fse.readFileSync(filePath);
   reader.readAsBinaryString(new Blob([file]));
-})
+});

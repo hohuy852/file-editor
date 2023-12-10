@@ -3,10 +3,10 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fse = require('fs-extra');
 
-
 function createEdit() {
-    mainWindow = new BrowserWindow({
-        resizable:false,
+    editWindow = new BrowserWindow({
+        resizable: false,
+        modal:true,
         width: 400,
         height: 300,
         // autoHideMenuBar: true,
@@ -23,14 +23,14 @@ function createEdit() {
 
     });
     const indexPath = path.join(__dirname, '../../edit.html');
-    mainWindow.loadFile(indexPath);
+    editWindow.loadFile(indexPath);
     // Set mainWindow to null when the window is closed
-    mainWindow.on('closed', () => {
-        mainWindow = null;
+    editWindow.on('closed', () => {
+        editWindow = null;
     });
-    return mainWindow; // Return the created window
+    return editWindow; // Return the created window
 }
-function HandleCreateEdit(mainWindow) {
+function HandleCreateEdit() {
     ipcMain.on('handleEditDialog', (event) => {
         createEdit()
     });

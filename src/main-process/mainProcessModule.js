@@ -20,7 +20,6 @@ function createLoader() {
         height: 228,
         minimizable: false,
         maximizable: false,
-        closable: false,
         skipTaskbar: true,
         webPreferences: {
             nodeIntegration: true,
@@ -95,10 +94,20 @@ ipcMain.on('openFile', (event) => {
 })
 
 function loadedSuccess(){
-
     loadWindow.webContents.send('loadedSuccess', 'Đã hoàn tất');
 }
+async function listFolder(event, folderPath) {
+    try {
+        // createLoader();
+        const directories = await listFolderRecursively(folderPath, event);
+        event.reply('folderContents', directories);
+        loadedSuccess()
 
+    } catch (error) {
+        console.error('Error listing folder contents:', error);
+        event.reply('folderContentsError', error.message);
+    }
+}
 async function listFile(event, folderPath) {
     try {
         createLoader();
@@ -157,18 +166,7 @@ async function listFilesRecursively(folderPath) {
     }
 }
 
-async function listFolder(event, folderPath) {
-    try {
-        createLoader();
-        const directories = await listFolderRecursively(folderPath, event);
-        event.reply('folderContents', directories);
-        loadedSuccess()
 
-    } catch (error) {
-        console.error('Error listing folder contents:', error);
-        event.reply('folderContentsError', error.message);
-    }
-}
 async function listFolderRecursively(folderPath, event, totalItems = 0, processedItems = 0) {
     try {
         const contents = await fse.readdir(folderPath, { withFileTypes: true });
@@ -274,4 +272,4 @@ function openSaveDialog(event) {
         return null;
     });
 }
-module.exports = { createWindow, listFolder };
+module.exports = { createWindow, listFolder, mainWindow };

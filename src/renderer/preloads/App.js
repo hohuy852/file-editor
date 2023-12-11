@@ -42,7 +42,6 @@ class App {
 
     // Clear existing table rows
     tableBody.innerHTML = "";
-    console.log(jsonData);
 
     // Add new rows based on the JSON data
     jsonData.forEach((row) => {
@@ -105,6 +104,8 @@ class App {
 
         tableBody.appendChild(row);
       });
+
+
     }
     const editableCells = document.querySelectorAll(".editableCell");
 
